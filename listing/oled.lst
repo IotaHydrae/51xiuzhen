@@ -1,0 +1,337 @@
+C51 COMPILER V9.00   OLED                                                                  12/13/2020 11:34:14 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE OLED
+OBJECT MODULE PLACED IN .\out\oled.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE src\oled.c LARGE BROWSE INCDIR(.\lib;.\src\input) DEBUG
+                    - OBJECTEXTEND PRINT(.\listing\oled.lst) OBJECT(.\out\oled.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include "gpio_spi.h"
+   4          #include "oledfont.h"
+   5          #include "head.h"
+   6          
+   7          static unsigned char index_line = 0;
+   8          
+   9          struct Position
+  10          {
+  11              /* 
+  12                  page£∫“≥
+  13                  col: ¡–
+  14                  rem£∫“≥”‡ ˝
+  15               */
+  16              int page;
+  17              int col;
+  18              int rem;
+  19          };
+  20          
+  21          static void OLED_Set_DC(unsigned char val)
+  22          {
+  23   1              if(val)
+  24   1                      DC = 1;
+  25   1              else
+  26   1                      DC = 0;
+  27   1      }
+  28          
+  29          static void OLED_Set_CS(unsigned char val)
+  30          {
+  31   1              if(val)
+  32   1                      CS = 1;
+  33   1              else
+  34   1                      CS = 0;
+  35   1      }
+  36          
+  37          static void OLEDWriteCmd(unsigned char cmd)
+  38          {
+  39   1              OLED_Set_DC(0); /*command*/
+  40   1              OLED_Set_CS(0); /* selected */
+  41   1      
+  42   1              SPISendByte(cmd);
+  43   1      
+  44   1              OLED_Set_DC(1);
+  45   1              OLED_Set_CS (1);
+  46   1      }
+  47          
+  48          static void OLEDWriteDat(unsigned char dat)
+  49          {
+  50   1              OLED_Set_DC(1); /*dat*/
+  51   1              OLED_Set_CS(0); /* selected */
+  52   1      
+  53   1              SPISendByte(dat);
+  54   1      
+C51 COMPILER V9.00   OLED                                                                  12/13/2020 11:34:14 PAGE 2   
+
+  55   1              OLED_Set_DC(1);
+  56   1              OLED_Set_CS (1);
+  57   1      }
+  58          
+  59          static void OLEDSetPos(unsigned char page,unsigned char col)
+  60          {
+  61   1              /* ËÆæÁΩÆÈ°µÂú∞ÂùÄ */
+  62   1              OLEDWriteCmd(0xB0+page);
+  63   1      
+  64   1              /* ËÆæÁΩÆÂàóÂú∞ÂùÄ */
+  65   1              OLEDWriteCmd(0x00|(col&0x0f));        /* ‰ΩéÂú∞ÂùÄ */
+  66   1              OLEDWriteCmd(0x10|(col >> 4));  /* È´òÂú∞ÂùÄ */
+  67   1      }
+  68          
+  69          /* OLED¡¡∂»øÿ÷∆ 256º∂ */
+  70          void OLEDSetBrightness(unsigned char value)
+  71          {
+  72   1      
+  73   1      }
+*** WARNING C280 IN LINE 70 OF SRC\OLED.C: 'value': unreferenced local variable
+  74          
+  75          void OLEDClear(void)
+  76          {
+  77   1              int page, col;
+  78   1              for(page = 0;page < 8;page++)
+  79   1              {
+  80   2                      OLEDSetPos(page,0);
+  81   2                      for (col = 0; col<128;col++)
+  82   2                              OLEDWriteDat(0);
+  83   2              }
+  84   1      }
+  85          
+  86          /*
+  87                  A[1:0] = 00b, Horizontal Addressing Mode
+  88                  A[1:0] = 01b, Vertical Addressing Mode
+  89                  A[1:0] = 10b, Page Addressing Mode (RESET)
+  90                  A[1:0] = 11b, Invalid
+  91                  
+  92          */
+  93          static void OLEDSetMemoryAddressingMode(int mode)
+  94          {
+  95   1              OLEDWriteCmd(0x20);
+  96   1              switch(mode)
+  97   1              {
+  98   2                      case 0:OLEDWriteCmd(0x00);break;        //Horizontal Addressing Mode
+  99   2                      case 1:OLEDWriteCmd(0x01);break;        //Vertical Addressing Mode
+ 100   2                      case 2:OLEDWriteCmd(0x02);break;        //Page Addressing Mode
+ 101   2                      case 3:OLEDWriteCmd(0x03);break;        //Invalid
+ 102   2                      default:OLEDWriteCmd(0x02);break;       //Page Addressing Mode
+ 103   2              }
+ 104   1              
+ 105   1      }
+ 106          void OLEDInit(void)
+ 107          {
+ 108   1              OLEDWriteCmd(0xae);     //--turn off oled panel
+ 109   1      
+ 110   1              OLEDWriteCmd(0x00);     //--set low column address
+ 111   1              OLEDWriteCmd(0x10);     //--set high column address
+ 112   1      
+ 113   1              OLEDWriteCmd(0x40);     //--set start line address
+ 114   1      
+ 115   1              OLEDWriteCmd(0xb0);     //--set page address
+C51 COMPILER V9.00   OLED                                                                  12/13/2020 11:34:14 PAGE 3   
+
+ 116   1      
+ 117   1              OLEDWriteCmd(0x81);     //--set contrast control register
+ 118   1              OLEDWriteCmd(0xff);
+ 119   1      
+ 120   1              OLEDWriteCmd(0xa1);     //--set segment re-map 127 to 0   a0:0 to seg127
+ 121   1              OLEDWriteCmd(0xa6);     //--set normal display
+ 122   1      
+ 123   1              OLEDWriteCmd(0xc9);     //--set com(N-1)to com0  c0:com0 to com(N-1)
+ 124   1      
+ 125   1              OLEDWriteCmd(0xa8);     //--set multiples ratio(1to64)
+ 126   1              OLEDWriteCmd(0x3f);     //--1/64 duty
+ 127   1      
+ 128   1              OLEDWriteCmd(0xd3);     //--set display offset
+ 129   1              OLEDWriteCmd(0x00);     //--not offset
+ 130   1      
+ 131   1              OLEDWriteCmd(0xd5);     //--set display clock divide ratio/oscillator frequency
+ 132   1              OLEDWriteCmd(0x80);     //--set divide ratio
+ 133   1      
+ 134   1              OLEDWriteCmd(0xd9);     //--set pre-charge period
+ 135   1              OLEDWriteCmd(0xf1);
+ 136   1      
+ 137   1              OLEDWriteCmd(0xda);     //--set com pins hardware configuration
+ 138   1              OLEDWriteCmd(0x12);
+ 139   1      
+ 140   1              OLEDWriteCmd(0xdb);     //--set vcomh
+ 141   1              OLEDWriteCmd(0x40);
+ 142   1      
+ 143   1              OLEDWriteCmd(0x8d);     //--set chare pump enable/disable
+ 144   1              OLEDWriteCmd(0x14);     //--set(0x10) disable
+ 145   1              OLEDSetMemoryAddressingMode(2);
+ 146   1      
+ 147   1              OLEDClear();
+ 148   1              
+ 149   1              //OLEDWriteCmd(0x10);   //--set(0x10) disable
+ 150   1              OLEDWriteCmd(0xaf);     //--turn on oled panel
+ 151   1      }
+ 152          
+ 153          
+ 154          void OLEDPutChar(unsigned char page,
+ 155                                                  unsigned char col,
+ 156                                                  unsigned char c,
+ 157                                                  unsigned char display_type)
+ 158          {
+ 159   1              int i = 0;
+ 160   1              /* Ëé∑ÂèñÂ≠óÊ®° */
+ 161   1              const unsigned char *dots = oled_asc2_8x16[c - ' '];
+ 162   1      
+ 163   1              /* ÂèëÈÄÅÂà∞OLED */
+ 164   1              OLEDSetPos(page, col);
+ 165   1              /* ÂèëÂá∫8Â≠óËäÇÊï∞ÊçÆ */
+ 166   1              switch(display_type)
+ 167   1              {
+ 168   2                      case INVERT:
+ 169   2                      {
+ 170   3                              for(i=0;i<8;i++)
+ 171   3                                      OLEDWriteDat(~dots[i]);
+ 172   3      
+ 173   3                      /* ÂÜçÊ¨°ÂèëÈÄÅ8Â≠óËäÇÊï∞ÊçÆ */
+ 174   3                              OLEDSetPos(page+1, col);
+ 175   3                              for(i=0;i<8;i++)
+ 176   3                                      OLEDWriteDat(~dots[i+8]);
+ 177   3      
+C51 COMPILER V9.00   OLED                                                                  12/13/2020 11:34:14 PAGE 4   
+
+ 178   3                              break;
+ 179   3                      }
+ 180   2                      case NORMAL:
+ 181   2                      {
+ 182   3                              for(i=0;i<8;i++)
+ 183   3                                      OLEDWriteDat(dots[i]);
+ 184   3      
+ 185   3                      /* ÂÜçÊ¨°ÂèëÈÄÅ8Â≠óËäÇÊï∞ÊçÆ */
+ 186   3                              OLEDSetPos(page+1, col);
+ 187   3                              for(i=0;i<8;i++)
+ 188   3                                      OLEDWriteDat(dots[i+8]);
+ 189   3      
+ 190   3                              break;
+ 191   3                      }
+ 192   2                      case CLEAR:
+ 193   2                      {
+ 194   3                              for(i=0;i<8;i++)
+ 195   3                                      OLEDWriteDat(0);
+ 196   3      
+ 197   3                      /* ÂÜçÊ¨°ÂèëÈÄÅ8Â≠óËäÇÊï∞ÊçÆ */
+ 198   3                              OLEDSetPos(page+1, col);
+ 199   3                              for(i=0;i<8;i++)
+ 200   3                                      OLEDWriteDat(0);
+ 201   3                      }
+ 202   2                      default:break;
+ 203   2              }
+ 204   1      }
+ 205          
+ 206          /*
+ 207                  page: 0-7
+ 208                  col : 0-127
+ 209                  str:◊÷∑˚¥Æ
+ 210                  alignment: ∂‘∆Î∑Ω Ω
+ 211          */
+ 212          void OLEDPrint(unsigned char page,
+ 213                                          unsigned char col,
+ 214                                          unsigned char *str,
+ 215                                          unsigned char alignment,
+ 216                                          unsigned char display_type)
+ 217          {
+ 218   1              /* res = 128*64 */
+ 219   1              /*
+ 220   1                      ∂‘∆Î∑Ω Ω
+ 221   1                      1.æ”◊Û ƒ¨»œ∑Ω Ω
+ 222   1                      2.æ”÷–
+ 223   1                      3.æ””“
+ 224   1      
+ 225   1                      ∞¥∂‘∆Î∑Ω Ωº∆À„column
+ 226   1              */
+ 227   1              unsigned char data len,i = 0;
+ 228   1              unsigned char data space_left;
+ 229   1              while(str[i])
+ 230   1              {
+ 231   2                      i++;
+ 232   2              }
+ 233   1              len = i;
+ 234   1              space_left = 16-len;
+ 235   1              switch(alignment)
+ 236   1              {
+ 237   2                      case LEFT:      //æ”◊Û
+ 238   2                      {       
+ 239   3                              break;
+C51 COMPILER V9.00   OLED                                                                  12/13/2020 11:34:14 PAGE 5   
+
+ 240   3                      }
+ 241   2                      case CENTER: //æ”÷–
+ 242   2                      {
+ 243   3                              col = (space_left/2.0)*8;
+ 244   3                              break;
+ 245   3                      }
+ 246   2                      case RIGHT: //æ””“
+ 247   2                      {
+ 248   3                              col = space_left*8;
+ 249   3                              break;
+ 250   3                      }
+ 251   2                      default: break;
+ 252   2              }
+ 253   1              for(i=0;i<len;i++)
+ 254   1              {
+ 255   2                      OLEDPutChar(page, col, str[i], display_type);
+ 256   2                      col += 8;
+ 257   2              }
+ 258   1      }
+ 259          
+ 260          void OLED_Set_Display(unsigned char val)
+ 261          {
+ 262   1      
+ 263   1      }
+*** WARNING C280 IN LINE 260 OF SRC\OLED.C: 'val': unreferenced local variable
+ 264          
+ 265          unsigned char SelectBitValue(int val)
+ 266          {
+ 267   1              /* ”‡ ˝◊™ Æ¡˘Ω¯÷∆∫Ø ˝ */
+ 268   1          unsigned char temp = 0x00;
+ 269   1          unsigned char op = 0x01;
+ 270   1          unsigned char result;
+ 271   1          val = 7 - val;
+ 272   1          result = temp | (op << val);
+ 273   1          return result;
+ 274   1      }
+ 275          
+ 276          
+ 277          struct Position XY2PageCol(int x, int y)
+ 278          {
+ 279   1              /* xy◊¯±Íµ„◊™ªªŒ™page∫ÕColum */
+ 280   1          struct Position pos;
+ 281   1      
+ 282   1          pos.page = 7 - y / 8;
+ 283   1          pos.col = x;
+ 284   1          pos.rem = y % 8;
+ 285   1          return pos;
+ 286   1      }
+ 287          
+ 288          
+ 289          void OLEDPutPixel(int x, int y)
+ 290          {
+ 291   1              /* √Ëµ„∫Ø ˝draw range x:0~127 y:0~63 */
+ 292   1          /* Ω´Ω” ’µΩµƒx,y◊¯±Í◊™ªªŒ™page∫Õcol */
+ 293   1          unsigned char dat;
+ 294   1          struct Position pos;
+ 295   1      
+ 296   1          pos = XY2PageCol(x, y); //◊¯±Í◊™ªª
+ 297   1      
+ 298   1          OLEDSetPos(pos.page, pos.col); //…Ë÷√ª≠± Œª÷√
+ 299   1          dat = SelectBitValue(pos.rem); //ªÒ»°“≥”‡ ˝
+ 300   1          OLEDWriteDat(dat);             //œÚoled÷––¥ ˝æ›
+C51 COMPILER V9.00   OLED                                                                  12/13/2020 11:34:14 PAGE 6   
+
+ 301   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1142    ----
+   CONSTANT SIZE    =   1520    ----
+   XDATA SIZE       =      1      39
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

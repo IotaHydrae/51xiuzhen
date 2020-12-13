@@ -1,0 +1,85 @@
+#include "game_engine.h"
+#include "head.h"
+#include "input/encoder.h"
+#include "oled.h"
+/* game page */
+struct section xdata start_page;
+struct section xdata main_game_page;
+struct section xdata attribute;
+
+struct option xdata line1;
+struct option xdata line2;
+struct option xdata line3;
+struct option xdata line4;
+struct position pos;
+/* player property */
+struct entity player;
+
+static bit btn_flag = 0;
+void Game_Init(void)
+{
+    /* 初始化实体属性 */
+    player = MakeEntity(10,5,100);
+    /* 初始化首页 */
+    pos.page=0;
+    pos.col=0;
+    line1 = MakeOption(1, "", NORMAL, CENTER);
+    line2 = MakeOption(2, "Start Game", INVERT, CENTER);
+    line3 = MakeOption(3, "Help", NORMAL, CENTER);
+    line4 = MakeOption(4, "", NORMAL, CENTER);
+    start_page = MakeSection(line1,line2,line3,line4);
+
+    /* 游戏主界面 */
+    line1 = MakeOption(1, "Attribute", INVERT, CENTER);
+    line2 = MakeOption(2, "Backpack", NORMAL, CENTER);
+    line3 = MakeOption(3, "Cave", NORMAL, CENTER);
+    line4 = MakeOption(4, "Discover", NORMAL, CENTER);
+    main_game_page = MakeSection(line1,line2,line3,line4);
+
+    /* 属性 */
+    line1 = MakeOption(1, "Damage", NORMAL, LEFT);
+    line2 = MakeOption(2, "Defense", NORMAL, LEFT);
+    line3 = MakeOption(3, "Health", NORMAL, LEFT);
+    line4 = MakeOption(4, "", NORMAL, LEFT);
+    attribute = MakeSection(line1,line2,line3,line4);
+
+    /* Backpack */
+    /* Cave */
+    /* Discover */
+
+    /* 页面指向 */
+}
+
+void Game_Start()
+{
+    Show_Game_Menu(start_page);
+}
+void Game_Loop()
+{
+    unsigned char ec11_res;
+        //get encoder dat
+        ec11_res = Encoder_Key_Scan();
+        //pre option
+        
+        if(ec11_res=='L')
+        {
+            OLEDPrint(0,0,"LEFT",CENTER,NORMAL);
+            OLEDPrint(0,0,"LEFT",CENTER,CLEAR);
+        }
+        //next option
+        else if(ec11_res=='R')
+        {
+            OLEDPrint(0,0,"RIGHT",CENTER,NORMAL);
+            OLEDPrint(0,0,"RIGHT",CENTER,CLEAR);
+        }
+        //enter option
+        if(btn_flag==1)
+        {
+            OLEDPrint(0,0,"keydown",CENTER,NORMAL);
+            btn_flag=0;
+        }
+}
+void int3_Routine(void) interrupt INT_INT3
+{
+    btn_flag = 1;
+}

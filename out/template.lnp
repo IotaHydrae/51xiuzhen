@@ -1,0 +1,10 @@
+".\out\STARTUP.obj",
+".\out\game_engine.obj",
+".\out\game_logic.obj",
+".\out\gpio_spi.obj",
+".\out\main.obj",
+".\out\oled.obj",
+".\out\uart.obj",
+".\out\encoder.obj" 
+TO ".\out\template" 
+PRINT(".\listing\template.m51") RAMSIZE(256) 

@@ -1,0 +1,298 @@
+C51 COMPILER V9.00   GAME_ENGINE                                                           12/13/2020 11:42:49 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE GAME_ENGINE
+OBJECT MODULE PLACED IN .\out\game_engine.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE src\game_engine.c LARGE BROWSE INCDIR(.\lib;.\src\input
+                    -) DEBUG OBJECTEXTEND PRINT(.\listing\game_engine.lst) OBJECT(.\out\game_engine.obj)
+
+line level    source
+
+   1          #include "oled.h"
+   2          #include "head.h"
+   3          #include "game_engine.h"
+   4          #include <intrins.h>
+   5          
+   6          int strlen(unsigned char *p)
+   7          {
+   8   1              int len=0;
+   9   1              while(*p!='\0')
+  10   1              {
+  11   2                      p++;
+  12   2                      len++;
+  13   2              }
+  14   1              return len;
+  15   1      }
+  16          
+  17          /* 鏀诲嚮 */
+  18          /* 显示页面到oled */
+  19          void Show_Game_Menu(struct section sec)
+  20          {
+  21   1              if(strlen(sec.line1.text)>0) 
+  22   1              OLEDPrint(0,0,sec.line1.text, sec.line1.alignment,sec.line1.isSelected);
+  23   1              if(strlen(sec.line2.text)>0) 
+  24   1              OLEDPrint(2,0,sec.line2.text, sec.line2.alignment,sec.line2.isSelected);
+  25   1              if(strlen(sec.line3.text)>0) 
+  26   1              OLEDPrint(4,0,sec.line3.text, sec.line3.alignment,sec.line3.isSelected);
+  27   1              if(strlen(sec.line4.text)>0) 
+  28   1              OLEDPrint(6,0,sec.line4.text, sec.line4.alignment,sec.line4.isSelected);
+  29   1      }
+  30          void Hide_Game_Menu(struct section sec)
+  31          {
+  32   1              //if(strlen(sec.line1.text)>0) 
+  33   1              OLEDPrint(0,0,sec.line1.text, sec.line1.alignment,CLEAR);
+  34   1              //if(strlen(sec.line1.text)>0)  
+  35   1              OLEDPrint(2,0,sec.line2.text, sec.line2.alignment,CLEAR);
+  36   1              //if(strlen(sec.line1.text)>0)
+  37   1              OLEDPrint(4,0,sec.line3.text, sec.line3.alignment,CLEAR);
+  38   1              //if(strlen(sec.line1.text)>0)
+  39   1              OLEDPrint(6,0,sec.line4.text, sec.line4.alignment,CLEAR);       
+  40   1      }
+  41          void Change_Game_Menu()
+  42          {
+  43   1              Delayms(1000);
+  44   1      }
+  45          /*struct position MakePosition(unsigned char page, unsigned char col)
+  46          {
+  47                  struct position pos;
+  48                  pos.page = page;
+  49                  pos.col = col;
+  50                  return pos;
+  51          }*/
+  52          
+  53          struct option MakeOption(unsigned char which_in, 
+  54                                                                  unsigned char *text_in, 
+C51 COMPILER V9.00   GAME_ENGINE                                                           12/13/2020 11:42:49 PAGE 2   
+
+  55                                                                  unsigned char isSelected,
+  56                                                                  unsigned char alignment)
+  57          {
+  58   1              struct option opt;
+  59   1              opt.which = which_in;
+  60   1              opt.text = text_in;
+  61   1              opt.isSelected = isSelected;
+  62   1              opt.alignment = alignment;
+  63   1              return opt;
+  64   1      }
+  65          /* 结构体构造函数 */
+  66          struct section MakeSection(
+  67                                      struct option line1,
+  68                                                                  struct option line2,
+  69                                                                  struct option line3,
+  70                                                                  struct option line4)
+  71          {
+  72   1              struct section sec;
+  73   1              sec.line1= line1;
+  74   1              sec.line2= line2;
+  75   1              sec.line3= line3;
+  76   1              sec.line4= line4;
+  77   1              return sec;     
+  78   1      } 
+  79          
+  80          struct entity MakeEntity(unsigned char damage,
+  81                                                                  unsigned char defense,
+  82                                                                  unsigned char health)
+  83          {
+  84   1              struct entity object;
+  85   1              object.damage = damage;
+  86   1              object.defense = defense;
+  87   1              object.health = health;
+  88   1              return object;
+  89   1      }
+  90          
+  91          unsigned char clacNextOption(struct section sec_in, unsigned char selected_line,unsigned char direction)
+  92          {
+  93   1              unsigned char buf[4];
+  94   1              unsigned char index=0;
+  95   1              unsigned char i;
+  96   1              unsigned char sum=0;
+  97   1              struct ring_buffer
+  98   1              {
+  99   1                  unsigned char which_this;
+ 100   1                      struct ring_buffer *next;
+ 101   1              };
+ 102   1              struct ring_buffer pos1;
+ 103   1              struct ring_buffer pos2;
+ 104   1              struct ring_buffer pos3;
+ 105   1              struct ring_buffer pos4;
+ 106   1              struct ring_buffer *pos_now;
+ 107   1      
+ 108   1              if(strlen(sec_in.line1.text)>0)
+ 109   1              {
+ 110   2                      buf[index]=     sec_in.line1.which;
+ 111   2                      index++;
+ 112   2              }
+ 113   1              if(strlen(sec_in.line2.text)>0)
+ 114   1              {
+ 115   2                      buf[index]=     sec_in.line2.which;
+ 116   2                      index++;
+C51 COMPILER V9.00   GAME_ENGINE                                                           12/13/2020 11:42:49 PAGE 3   
+
+ 117   2              }
+ 118   1              if(strlen(sec_in.line3.text)>0)
+ 119   1              {
+ 120   2                      buf[index]=     sec_in.line3.which;
+ 121   2                      index++;
+ 122   2              }
+ 123   1              if(strlen(sec_in.line4.text)>0)
+ 124   1              {
+ 125   2                      buf[index]=     sec_in.line4.which;
+ 126   2                      index++;
+ 127   2              }
+ 128   1              //get option buf buf[inedx] index 1~4
+ 129   1              for(i=0;i<index;i++)
+ 130   1              {
+ 131   2                      sum+=buf[i];
+ 132   2              }
+ 133   1              
+ 134   1              switch(index)
+ 135   1              {
+ 136   2                      case 1:
+ 137   2                      {
+ 138   3                         return selected_line;
+ 139   3                      }
+ 140   2                      case 2:
+ 141   2                      { 
+ 142   3                         return (sum-selected_line);
+ 143   3                      }
+ 144   2                      case 3:
+ 145   2                      {
+ 146   3                         pos1.which_this = buf[0];
+ 147   3                         pos2.which_this = buf[1];
+ 148   3                         pos3.which_this = buf[2];
+ 149   3                         if(direction=='L')
+ 150   3                         {
+ 151   4                                 pos1.next=&pos3;
+ 152   4                                 pos2.next=&pos1;
+ 153   4                                 pos3.next=&pos2;
+ 154   4                         }else
+ 155   3                         {
+ 156   4                                 pos1.next=&pos2;
+ 157   4                                 pos2.next=&pos3;
+ 158   4                                 pos3.next=&pos1;                
+ 159   4                              }
+ 160   3                         if(selected_line==pos1.which_this) pos_now=pos1.next;
+ 161   3                         if(selected_line==pos2.which_this) pos_now=pos2.next;
+ 162   3                         if(selected_line==pos3.which_this) pos_now=pos3.next;
+ 163   3                         return pos_now->which_this;
+ 164   3      
+ 165   3                      }
+ 166   2                      case 4:
+ 167   2                      {
+ 168   3                         pos1.which_this = buf[0];
+ 169   3                         pos2.which_this = buf[1];
+ 170   3                         pos3.which_this = buf[2];
+ 171   3                         pos4.which_this = buf[3];
+ 172   3                         if(direction=='L')
+ 173   3                         {
+ 174   4                         pos1.next=&pos4;
+ 175   4                         pos2.next=&pos1;
+ 176   4                         pos3.next=&pos2;
+ 177   4                         pos4.next=&pos3;
+ 178   4                         }else
+C51 COMPILER V9.00   GAME_ENGINE                                                           12/13/2020 11:42:49 PAGE 4   
+
+ 179   3                         {
+ 180   4                         pos1.next=&pos2;
+ 181   4                         pos2.next=&pos3;
+ 182   4                         pos3.next=&pos4;
+ 183   4                         pos4.next=&pos1;        
+ 184   4                              }
+ 185   3                         if(selected_line==pos1.which_this) pos_now=pos1.next;
+ 186   3                         if(selected_line==pos2.which_this) pos_now=pos2.next;
+ 187   3                         if(selected_line==pos3.which_this) pos_now=pos3.next;        
+ 188   3                         if(selected_line==pos4.which_this) pos_now=pos4.next;                                
+ 189   3                         return pos_now->which_this;
+ 190   3                      }
+ 191   2                      default: break;
+ 192   2              }
+ 193   1                                      
+ 194   1      }
+ 195          
+ 196          struct option findWitchIsSelected(struct section current_section)
+ 197          {
+ 198   1              if((current_section.line1.isSelected==(unsigned char)-1) && (strlen(current_section.line1.text)>0))
+ 199   1              {
+ 200   2                       return  current_section.line1;
+ 201   2              }
+ 202   1              if(current_section.line2.isSelected==(unsigned char)-1  && (strlen(current_section.line2.text)>0))
+ 203   1              {
+ 204   2                      return  current_section.line2;
+ 205   2              }
+ 206   1              if(current_section.line3.isSelected==(unsigned char)-1  && (strlen(current_section.line3.text)>0))
+ 207   1              {
+ 208   2                      return  current_section.line3;  
+ 209   2              }
+ 210   1              if((current_section.line4.isSelected==(unsigned char)-1)  && (strlen(current_section.line4.text)>0))
+ 211   1              {
+ 212   2                      return  current_section.line4;  
+ 213   2              }
+ 214   1      }
+ 215          
+ 216          unsigned char isAlive(struct entity *entity_in)
+ 217          {
+ 218   1          if(entity_in->health <=0)
+ 219   1          {
+ 220   2              return DIED;
+ 221   2          }
+ 222   1          else
+ 223   1          {
+ 224   2              return ALIVE;
+ 225   2          }
+ 226   1      }
+ 227          void Delayms(unsigned int n) //@11.0592MHz
+ 228          {
+ 229   1          unsigned char i, j;
+ 230   1          unsigned int m;
+ 231   1      
+ 232   1          for (m = 0; m < n; m++)
+ 233   1          {
+ 234   2              _nop_();
+ 235   2              i = 2;
+ 236   2              j = 199;
+ 237   2              do
+ 238   2              {
+ 239   3                  while (--j)
+ 240   3                      ;
+C51 COMPILER V9.00   GAME_ENGINE                                                           12/13/2020 11:42:49 PAGE 5   
+
+ 241   3              } while (--i);
+ 242   2          }
+ 243   1      }
+ 244          
+ 245          void DelayS(unsigned char n) //@11.0592MHz
+ 246          {
+ 247   1          unsigned char i, j, k;
+ 248   1          unsigned char m;
+ 249   1          for (m = 0; m < n; m++)
+ 250   1          {
+ 251   2              _nop_();
+ 252   2              i = 8;
+ 253   2              j = 1;
+ 254   2              k = 243;
+ 255   2              do
+ 256   2              {
+ 257   3                  do
+ 258   3                  {
+ 259   4                      while (--k)
+ 260   4                          ;
+ 261   4                  } while (--j);
+ 262   3              } while (--i);
+ 263   2          }
+ 264   1      }
+*** WARNING C291 IN LINE 194 OF SRC\GAME_ENGINE.C: not every exit path returns a value
+*** WARNING C291 IN LINE 214 OF SRC\GAME_ENGINE.C: not every exit path returns a value
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1386    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----     289
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

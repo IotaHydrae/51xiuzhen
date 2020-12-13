@@ -1,0 +1,76 @@
+C51 COMPILER V9.00   ENCODER                                                               12/13/2020 11:34:15 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE ENCODER
+OBJECT MODULE PLACED IN .\out\encoder.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE src\input\encoder.c LARGE BROWSE INCDIR(.\lib;.\src\inp
+                    -ut) DEBUG OBJECTEXTEND PRINT(.\listing\encoder.lst) OBJECT(.\out\encoder.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include <intrins.h>
+   3          #include "head.h"
+   4          #include "encoder.h"
+   5          #define delay() {_nop_();_nop_();_nop_();}
+   6          
+   7          sfr XICON = 0xc0;
+   8          sbit IT3 = XICON^4;
+   9          sbit IE3 = XICON^5;
+  10          sbit EX3 = XICON^6;
+  11          
+  12          void Encoder_Init(void)
+  13          {
+  14   1          IT3=1;
+  15   1          EX3=1;
+  16   1          EA=1; //¿ª×ÜÖÐ¶Ï
+  17   1      }
+  18          
+  19          unsigned char Encoder_Key_Scan()
+  20          {
+  21   1          static bit ec11_flag=0,left_flag=0,right_flag=0;
+  22   1          unsigned char res=0;
+  23   1          if(ENCODER_CLK_A&&ENCODER_DT_B)
+  24   1          {
+  25   2              ec11_flag = 1;
+  26   2          }
+  27   1          if(ENCODER_CLK_A!=ENCODER_DT_B)
+  28   1          {
+  29   2              left_flag = ENCODER_CLK_A;
+  30   2              right_flag = ENCODER_DT_B;
+  31   2          }
+  32   1          if(ec11_flag)
+  33   1          {
+  34   2              if((ENCODER_CLK_A==0)&&(ENCODER_DT_B==0))
+  35   2              {
+  36   3                  if(left_flag)
+  37   3                  {
+  38   4                      res='L';
+  39   4                  }
+  40   3                  else if(right_flag)
+  41   3                  {
+  42   4                      res='R';
+  43   4                  }
+  44   3                  ec11_flag = 0;
+  45   3              }
+  46   2          }
+  47   1      
+  48   1          return res;
+  49   1      }
+  50          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     57    ----
+C51 COMPILER V9.00   ENCODER                                                               12/13/2020 11:34:15 PAGE 2   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

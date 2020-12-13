@@ -1,0 +1,59 @@
+#include <reg52.h>
+#include <intrins.h>
+#include "head.h"
+#include "encoder.h"
+#define delay() {_nop_();_nop_();_nop_();}
+
+sfr XICON = 0xc0;
+sbit IT3 = XICON^4;
+sbit IE3 = XICON^5;
+sbit EX3 = XICON^6;
+
+void Encoder_Init(void)
+{
+    IT3=1;
+    EX3=1;
+    EA=1; //¿ª×ÜÖÐ¶Ï
+}
+
+unsigned char Encoder_Key_Scan(void)
+{
+    unsigned char data_A=1,data_B=1;
+	unsigned char comb_data;
+	unsigned char t_flag;
+    data_A = ENCODER_CLK_A;
+    data_B = ENCODER_DT_B;
+	if(ENCODER_CLK_A&&ENCODER_DT_B)
+	{
+		t_flag = 1;
+		if(ENCODER_CLK_A!=ENCODER_DT_B)
+		{
+		data_A = (data_A << 1) | ENCODER_CLK_A;
+		data_B = (data_B << 1) | ENCODER_DT_B;			
+		}
+		
+		if(t_flag)
+		{
+			data_A = (data_A << 1) | ENCODER_CLK_A;
+		data_B = (data_B << 1) | ENCODER_DT_B;	
+			comb_data = (data_A<<4) & data_B;
+			switch(comb_data)
+			{
+				case 0xc4:
+				{
+					return 'R';
+					break;
+				}
+				case 0x86:
+				{
+                    return 'L';
+					break;
+				}
+				default:break;
+			}
+		}
+	}
+
+    return 0;
+}
+

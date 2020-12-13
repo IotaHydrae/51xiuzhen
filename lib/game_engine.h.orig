@@ -1,0 +1,68 @@
+#ifndef __GAME_ENGINE_H__
+#define __GAME_ENGINE_H__
+
+struct position
+{
+    unsigned char page;
+    unsigned char col;
+};
+
+/* 选项 */
+struct option
+{
+	struct position pos;
+
+	unsigned char which;	
+    unsigned char *text;     //显示到外部的文本
+    unsigned char isSelected;
+	unsigned char alignment;
+	unsigned char sub_menu;    
+};
+
+/* 操作界面 */
+struct section
+{
+    /* 选项 */
+    struct option line1;
+    struct option line2;
+    struct option line3;
+    struct option line4;
+	struct section *nextSection;
+	struct section *preSection;  
+};
+
+/* 
+    实体
+    可以是玩家敌人npc等等 
+*/
+struct entity
+{
+    /* 常规属性 */
+    unsigned char damage;
+    unsigned char defense;
+    unsigned char health;
+};
+
+void Show_Game_Menu(struct section sec);
+void Hide_Game_Menu(struct section sec);
+
+struct position MakePosition(unsigned char page, unsigned char col);
+struct option MakeOption(unsigned char which_in, 
+							unsigned char *text_in, 
+							unsigned char isSelected,
+							unsigned char alignment, 
+							struct position pos);
+
+struct section MakeSection(struct option line1,
+							struct option line2,
+							struct option line3,
+							struct option line4,
+							struct section sec);
+
+struct entity MakeEntity(unsigned char damage,
+							unsigned char defense,
+							unsigned char health);
+void Change_Game_Menu();
+void Delayms(unsigned int n);
+void DelayS(unsigned char n);
+#endif
